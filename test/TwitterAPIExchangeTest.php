@@ -105,10 +105,10 @@ class TwitterAPIExchangeTest extends \PHPUnit_Framework_TestCase
     {
         $url    = 'https://api.twitter.com/1.1/statuses/home_timeline.json';
         $method = 'GET';
-        $params = '?user_id=3232926711&max_id=756123701888839681';
+        $params = '?user_id=3232926711&max_id=943202220002234369';
 
         $data     = $this->exchange->request($url, $method, $params);
-        $expected = "Test Tweet";
+        $expected = "Pull up!";
 
         $this->assertContains($expected, $data);
     }
