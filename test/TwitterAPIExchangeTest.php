@@ -335,4 +335,16 @@ class TwitterAPIExchangeTest extends \PHPUnit_Framework_TestCase
 
         $this->assertContains('UNAUTHORIZED_CLIENT_APPLICATION', $data);
     }
+
+    public function testResponseHeaders()
+    {
+        $url    = 'https://api.twitter.com/1.1/users/lookup.json';
+        $method = 'GET';
+        $params = '?screen_name=J7mbo';
+
+        $this->exchange->includeResponseHeaders()->request($url, $method, $params);
+        $headers = $this->exchange->getResponseHeaders();
+
+        $this->assertArrayHasKey('http_code', $headers);
+    }
 }

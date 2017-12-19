@@ -45,6 +45,16 @@ class TwitterAPIExchange
     private $getfield;
 
     /**
+     * @var boolean
+     */
+    private $include_response_headers = false;
+
+    /**
+     * @var array
+     */
+    private $response_headers = array();
+
+    /**
      * @var mixed
      */
     protected $oauth;
@@ -290,7 +300,7 @@ class TwitterAPIExchange
 
         $options = $curlOptions + array(
             CURLOPT_HTTPHEADER => $header,
-            CURLOPT_HEADER => false,
+            CURLOPT_HEADER => $this->include_response_headers,
             CURLOPT_URL => $this->url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 10,
@@ -310,7 +320,14 @@ class TwitterAPIExchange
 
         $feed = curl_init();
         curl_setopt_array($feed, $options);
-        $json = curl_exec($feed);
+        $response = curl_exec($feed);
+
+        if($this->include_response_headers){
+          list($headersText, $json) = explode("\r\n\r\n", $response, 2);
+          $this->response_headers = $this->parseResponseHeaders($headersText);
+        } else {
+          $json = $response;
+        }
 
         $this->httpStatusCode = curl_getinfo($feed, CURLINFO_HTTP_CODE);
 
@@ -406,5 +423,51 @@ class TwitterAPIExchange
     public function getHttpStatusCode()
     {
         return $this->httpStatusCode;
+    }
+
+    /**
+     * Handle capturing response headers as well as content when performing request
+     *
+     * @return \TwitterAPIExchange Instance of self for method chaining
+     */
+    public function includeResponseHeaders()
+    {
+        $this->include_response_headers = true;
+        return $this;
+    }
+
+    /**
+     * Turn the headers text string into an array
+     *
+     * @param string $text
+     *
+     * @return array
+     */
+    private function parseResponseHeaders($text)
+    {
+        $headers = array();
+        foreach(explode("\r\n", $text) as $i => $line){
+
+            if($i === 0){
+                $headers['http_code'] = $line;
+                continue;
+            }
+
+
+            list($key, $value) = explode(': ', $line);
+            $headers[$key] = $value;
+        }
+
+        return $headers;
+    }
+
+    /**
+     * Get the response headers array
+     *
+     * @return array
+     */
+    public function getResponseHeaders()
+    {
+        return $this->response_headers;
     }
 }
